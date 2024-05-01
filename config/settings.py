@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 import environ
 import os
@@ -40,7 +40,7 @@ DEBUG = True
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework", #rest framework를 사용할 것이라 알림
     "rest_framework_simplejwt", # 인증 관련
     "rest_framework.authtoken",# 인증 관련
@@ -65,6 +66,23 @@ INSTALLED_APPS = [
     "accounts",  # 유저 정보 관련 기능
 ]
 
+REST_USE_JWT = True #jwt 사용 여부
+JWT_AUTH_COOKIE = 'accounts-auth' # 호출할 cookie key 값
+JWT_AUTH_REFRESH_COOKIE = 'accounts-refresh-token' # refresh token cookie key 값
+
+REST_FRAMEWORK = {
+    # 토큰을 통한 인증을 기본 인증 클래스로
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    # 승인된 사람이 아니면 페이지에 들어갈 수 없다
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+
+
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -76,8 +94,30 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 
 ]
+REST_AUTH = {
+   "REGISTER_SERIALIZER":"accounts.serializers.CustomRegisterSerializer",
+}
 
-ROOT_URLCONF = "accounts.urls"
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+SITE_ID = 1
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username' # User 모델의 username 변경 x
+ACCOUNT_EMAIL_REQUIRED = False          # email 필드 사용 x
+ACCOUNT_USERNAME_REQUIRED = True        # username 필드 사용 o
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_VERIFICATION = 'none' # 회원가입 과정에서 이메일 인증 사용 X
+
+# CORS 설정 추가
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # 프론트엔드 도메인
+    "http://127.0.0.1:4040",
+    # 실제 배포 도메인 추가
+]
+
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -107,6 +147,14 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'asapDB',
+#         'HOST': '127.0.0.1',
+#         'PORT': 27017,
+#     }
+# }
 
 
 # Password validation
@@ -131,9 +179,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -149,3 +197,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = 'auth.User'
+#django sites app setting
+# 미디어 파일이 저장될 디렉토리 경로 설정
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
